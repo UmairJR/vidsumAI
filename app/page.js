@@ -163,12 +163,12 @@ export default function Home() {
           {loader && <span className="loading loading-bars loading-md mt-1"></span>}
 
         </form>
-        <button
+        {/* <button
         onClick={handleCheck}
         className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
       >
         Check Connection
-      </button>
+      </button> */}
         {summary && (
           <Collapse 
           // summary={summary} 
