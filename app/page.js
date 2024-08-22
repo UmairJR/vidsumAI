@@ -43,6 +43,7 @@ export default function Home() {
 
   const load = async () => {
     console.log('LOADING')
+    if (typeof window !== 'undefined') {
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
     const ffmpeg = ffmpegRef.current;
     ffmpeg.on('log', ({ message }) => {
@@ -54,6 +55,7 @@ export default function Home() {
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
     });
+  }
     setLoaded(true);
   }
   const parseResponse = (responseText) => {
@@ -88,6 +90,7 @@ export default function Home() {
     setLoader(true);
     setLoading(true);
     console.log('TRANSCODE');
+    if (typeof window !== 'undefined') {
     const ffmpeg = ffmpegRef.current;
     console.log('REF');
     console.log(await ffmpeg.writeFile('input.mp4', await fetchFile(file)));
@@ -98,6 +101,7 @@ export default function Home() {
     console.log('EXEC FILE');
     const data = await ffmpeg.readFile('output.mp3');
     console.log(data);
+    }
     const blob = new Blob([data], { type: 'audio/mpeg' });
     const url = URL.createObjectURL(blob);
     console.log(url);
