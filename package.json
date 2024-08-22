@@ -1,0 +1,37 @@
+{
+  "name": "my-summary",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "axios": "^1.7.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ffmpeg": "^0.0.4",
+    "fluent-ffmpeg": "^2.1.3",
+    "formidable": "^3.5.1",
+    "fs": "^0.0.1-security",
+    "multer": "^1.4.5-lts.1",
+    "next": "14.2.5",
+    "nodemon": "^3.1.4",
+    "openai": "^4.55.0",
+    "path": "^0.12.7",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "daisyui": "^4.12.10",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1"
+  }
+}
