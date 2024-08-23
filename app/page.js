@@ -1,9 +1,10 @@
 'use client'
 import axios from "axios";
+import dynamic from 'next/dynamic';
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+// import { FFmpeg } from '@ffmpeg/ffmpeg';
+// import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import ThemeController from "./components/ThemeController";
 import Navbar from "./components/Navbar";
 import Collapse from "./components/Collapse";
@@ -22,7 +23,8 @@ export default function Home() {
   const [disable, setDisable] = useState(true);
   const [loader, setLoader] = useState(false);
   const [data, setData] = useState('')
-  const ffmpegRef = useRef(new FFmpeg());
+  // const ffmpegRef = useRef(new FFmpeg());
+  const ffmpegRef = useRef(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -43,9 +45,15 @@ export default function Home() {
 
   const load = async () => {
     console.log('LOADING')
-    if (typeof window !== 'undefined') {
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { toBlobURL } = await import('@ffmpeg/util');
+    const ffmpeg = new FFmpeg();
+    ffmpegRef.current = ffmpeg;
+
+    console.log('FFmpeg instance created:', ffmpegRef.current);
+    
     const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
-    const ffmpeg = ffmpegRef.current;
+    
     ffmpeg.on('log', ({ message }) => {
       console.log(message);
     });
@@ -55,7 +63,7 @@ export default function Home() {
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
       wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
     });
-  }
+  
     setLoaded(true);
   }
   const parseResponse = (responseText) => {
@@ -89,54 +97,38 @@ export default function Home() {
     console.log(file)
     setLoader(true);
     setLoading(true);
+    console.log('FFmpeg current:', ffmpegRef.current);
+    
     console.log('TRANSCODE');
-    if (typeof window !== 'undefined') {
-    const ffmpeg = ffmpegRef.current;
-    console.log('REF');
-    console.log(await ffmpeg.writeFile('input.mp4', await fetchFile(file)));
+    
+    if (ffmpegRef.current && loaded) {
+      const ffmpeg = ffmpegRef.current;
+      const { fetchFile } = await import('@ffmpeg/util');
+      await ffmpeg.writeFile('input.mp4', await fetchFile(file));
+      await ffmpeg.exec(['-i', 'input.mp4', 'output.mp3']);
+      const data = await ffmpeg.readFile('output.mp3');
 
-    await ffmpeg.writeFile('input.mp4', await fetchFile(file));
-    console.log('WRITE FILE');
-    await ffmpeg.exec(['-i', 'input.mp4', 'output.mp3']);
-    console.log('EXEC FILE');
-    const data = await ffmpeg.readFile('output.mp3');
-    console.log(data);
-    }
-    const blob = new Blob([data], { type: 'audio/mpeg' });
-    const url = URL.createObjectURL(blob);
-    console.log(url);
-    setAudioSrc(url);
-    setStatus("Summarizing....")
-    const buffer = Buffer.from(data); // Convert Uint8Array to Buffer
-    const formData = new FormData();
-    formData.append('audio', blob, 'output.mp3');
-    try {
-      // const response = await axios.post('https://my-summary-server.onrender.com/api/upload', formData, {
-      //   headers: {
-      //     'Content-Type': 'application/octet-stream',
-      //   },
-      // });
-      const response = await axios.post('https://my-summary-server.netlify.app/.netlify/functions/api/api/upload', formData, {
-        headers: {
-          'Content-Type': 'application/octet-stream',
-        },
-      });
-      
-      console.log('Upload successful');
-      console.log(response);
+      const blob = new Blob([data], { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      setAudioSrc(url);
+      setStatus("Summarizing...");
 
-      console.log('Transcription: ', response.data.transcription);
-      console.log('Summary: ', response.data.summary);
-      setTranscription(response.data.transcription)
-      setSummary(response.data.summary);
-      const data = parseResponse(response.data.summary);
-      console.log(data);
+      const formData = new FormData();
+      formData.append('audio', blob, 'output.mp3');
       
-      setData(data);
-      setStatus("Summarized")
-      setLoader(false);
-    } catch (error) {
-      console.error('Error:', error);
+      try {
+        const response = await axios.post('https://my-summary-server.netlify.app/.netlify/functions/api/api/upload', formData, {
+          headers: { 'Content-Type': 'application/octet-stream' },
+        });
+
+        setTranscription(response.data.transcription);
+        setSummary(response.data.summary);
+        setData(parseResponse(response.data.summary));
+        setStatus("Summarized");
+        setLoader(false);
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
   }
 
